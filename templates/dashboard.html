@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VPass - Login Successful</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0f172a;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.15) 0%, transparent 70%);
+            top: -250px;
+            right: -250px;
+            border-radius: 50%;
+        }
+        body::after {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(14, 165, 233, 0.12) 0%, transparent 70%);
+            bottom: -200px;
+            left: -200px;
+            border-radius: 50%;
+        }
+        .container {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            padding: 45px 40px;
+            max-width: 520px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+            animation: slideUp 0.6s ease-out;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5em;
+            color: white;
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.4);
+        }
+        .header h1 {
+            font-size: 2.2em;
+            color: #06b6d4;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+        .header p {
+            color: #94a3b8;
+            font-size: 1.1em;
+            font-weight: 500;
+        }
+        .verified-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 0.95em;
+            font-weight: 600;
+            margin: 20px auto;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .user-details {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+        .user-details h3 {
+            color: #e2e8f0;
+            font-size: 1.3em;
+            margin-bottom: 18px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+        }
+        .user-details p {
+            color: #cbd5e1;
+            font-size: 1em;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+        }
+        .user-details p:last-child {
+            border-bottom: none;
+        }
+        .user-details p strong {
+            color: #06b6d4;
+            display: inline-block;
+            min-width: 130px;
+            font-weight: 600;
+        }
+        button#logoutBtn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #06b6d4 0%, #0ea5e9 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.05em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(6, 182, 212, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 10px;
+        }
+        button#logoutBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(6, 182, 212, 0.5);
+        }
+        button#logoutBtn:active {
+            transform: translateY(0);
+        }
+        .info-text {
+            text-align: center;
+            color: #64748b;
+            font-size: 0.85em;
+            margin-top: 25px;
+            line-height: 1.6;
+        }
+        @media (max-width: 600px) {
+            .container { padding: 35px 25px; }
+            .header h1 { font-size: 1.9em; }
+            .success-icon { width: 70px; height: 70px; font-size: 2.2em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="success-icon">✓</div>
+            <h1>Logged in successfully</h1>
+            <p>Logged in with verifiable passkey (VPass)</p>
+        </div>
+
+        <div class="verified-badge">
+            Secured by Passkey Authentication
+        </div>
+
+        <div class="user-details">
+            <h3>User Information</h3>
+            <div id="userInfo">
+                <!-- Dynamic user data will be inserted here -->
+            </div>
+        </div>
+
+        <button id="logoutBtn">Logout</button>
+
+        <div class="info-text">
+            Your session is protected with hardware-backed passkey authentication.
+        </div>
+    </div>
+
+    <script>
+        const jsonString = '{{details | safe}}';
+        
+        try {
+            const userData = JSON.parse(jsonString);
+            let userHTML = '';
+            
+            for (const [key, value] of Object.entries(userData)) {
+                const label = key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
+                const safeValue = escapeHtml(String(value));
+                userHTML += `<p><strong>${label}:</strong> ${safeValue}</p>`;
+            }
+            
+            document.getElementById('userInfo').innerHTML = userHTML || '<p>No additional information available.</p>';
+        } catch (e) {
+            document.getElementById('userInfo').innerHTML = '<p style="color: #ef4444;">Failed to load user data.</p>';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            window.location.href = '/logout';
+        });
+    </script>
+</body>
+</html>

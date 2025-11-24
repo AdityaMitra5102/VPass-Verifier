@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VPass Verifier - Credential Verification</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0f172a;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.15) 0%, transparent 70%);
+            top: -250px;
+            right: -250px;
+            border-radius: 50%;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(14, 165, 233, 0.12) 0%, transparent 70%);
+            bottom: -200px;
+            left: -200px;
+            border-radius: 50%;
+        }
+
+        .container {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            padding: 45px 40px;
+            max-width: 520px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            color: #06b6d4;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            color: #94a3b8;
+            font-size: 1.05em;
+            font-weight: 400;
+        }
+
+        .upload-section {
+            background: rgba(15, 23, 42, 0.6);
+            border: 2px dashed rgba(6, 182, 212, 0.3);
+            border-radius: 12px;
+            padding: 40px 30px;
+            text-align: center;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-section:hover {
+            border-color: rgba(6, 182, 212, 0.6);
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        .upload-section.active {
+            border-color: #06b6d4;
+            background: rgba(6, 182, 212, 0.1);
+        }
+
+        .upload-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #06b6d4 0%, #0ea5e9 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+        }
+
+        .upload-section label {
+            color: #e2e8f0;
+            font-size: 1.1em;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+
+        .upload-section p {
+            color: #64748b;
+            font-size: 0.9em;
+            margin-top: 8px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-name {
+            color: #06b6d4;
+            font-size: 0.95em;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(6, 182, 212, 0.1);
+            border-radius: 6px;
+            display: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #06b6d4 0%, #0ea5e9 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.05em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(6, 182, 212, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(6, 182, 212, 0.5);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #resultSection {
+            margin-top: 30px;
+            padding: 25px;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            animation: fadeIn 0.4s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        #statusMessage {
+            font-size: 1.5em;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        #statusMessage.success {
+            color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        #statusMessage.failed {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        #userDetails {
+            margin: 20px 0;
+        }
+
+        #userDetails h3 {
+            color: #e2e8f0;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        #userDetails p {
+            color: #cbd5e1;
+            font-size: 1em;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+        }
+
+        #userDetails p strong {
+            color: #06b6d4;
+            display: inline-block;
+            min-width: 100px;
+        }
+
+        #authenticateBtn {
+            margin-top: 20px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        #authenticateBtn:hover {
+            box-shadow: 0 6px 25px rgba(16, 185, 129, 0.5);
+        }
+
+        .info-text {
+            text-align: center;
+            color: #64748b;
+            font-size: 0.85em;
+            margin-top: 20px;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 35px 25px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .upload-section {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>VPass Verifier</h1>
+            <p>Verify Credential Authenticity</p>
+        </div>
+        
+        <div class="upload-section" id="uploadSection" onclick="document.getElementById('fileInput').click()">
+            <div class="upload-icon">📄</div>
+            <label for="fileInput">Upload Verifiable Passkey</label>
+            <p>Drop your VPass JSON file here or click to browse</p>
+            <div class="file-name" id="fileName"></div>
+            <input type="file" id="fileInput" accept=".json">
+        </div>
+        
+        <button id="submitBtn">Verify Credentials</button>
+        
+        <p class="info-text">This system validates the cryptographic signature and authenticity of the provided VPass credentials against trusted issuers.</p>
+    </div>
+    
+    <div class="container" id="resultSection" style="display: none;">
+        <h2 id="statusMessage"></h2>
+        
+        <div id="userDetails"></div>
+        
+        <button id="authenticateBtn" style="display: none;">Proceed to Authentication</button>
+    </div>
+    
+    <script>
+        let jsonData = null;
+        
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const uploadSection = document.getElementById('uploadSection');
+                const fileName = document.getElementById('fileName');
+                
+                uploadSection.classList.add('active');
+                fileName.style.display = 'block';
+                fileName.textContent = '✓ ' + file.name;
+                
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    try {
+                        jsonData = JSON.parse(event.target.result);
+                    } catch (error) {
+                        alert('Invalid JSON file. Please upload a valid VPass file.');
+                        uploadSection.classList.remove('active');
+                        fileName.style.display = 'none';
+                        jsonData = null;
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+        
+        document.getElementById('submitBtn').addEventListener('click', async function() {
+            if (!jsonData) {
+                alert('Please upload a VPass JSON file first');
+                return;
+            }
+            
+            this.disabled = true;
+            this.textContent = 'Verifying...';
+            
+            try {
+                const response = await fetch('/verify', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(jsonData)
+                });
+                const result = await response.json();
+                
+                document.getElementById('resultSection').style.display = 'block';
+                document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                const statusMessage = document.getElementById('statusMessage');
+                
+                if (result.status === false) {
+                    statusMessage.textContent = '❌ Verification Failed';
+                    statusMessage.className = 'failed';
+                    document.getElementById('userDetails').innerHTML = '<p style="text-align: center; color: #ef4444;">The provided credentials could not be verified. The signature is invalid or the issuer is not trusted.</p>';
+                    document.getElementById('authenticateBtn').style.display = 'none';
+                } else if (result.status === true && result.user) {
+                    statusMessage.textContent = '✓ Verification Successful';
+                    statusMessage.className = 'success';
+                    
+                    let userHTML = '<h3>Verified Identity Details:</h3>';
+                    for (const [key, value] of Object.entries(result.user)) {
+                        const capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
+                        userHTML += `<p><strong>${capitalizedKey}:</strong> ${value}</p>`;
+                    }
+                    
+                    document.getElementById('userDetails').innerHTML = userHTML;
+                    document.getElementById('authenticateBtn').style.display = 'block';
+                }
+            } catch (error) {
+                alert('Error submitting credentials: ' + error.message);
+            } finally {
+                this.disabled = false;
+                this.textContent = 'Verify Credentials';
+            }
+        });
+        
+        document.getElementById('authenticateBtn').addEventListener('click', function() {
+            window.location.href = '/authenticate/begin';
+        });
+    </script>
+</body>
+</html>
