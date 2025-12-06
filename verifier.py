@@ -109,7 +109,7 @@ def verify():
 			session.pop('cred')
 		return jsonify({'status':False})
 	
-	resp={'status': cred is not None, 'user': cred['credentialSubject']['user']}
+	resp={'status': cred is not None, 'user': cred['credentialSubject']['user'], 'pagex': cred['credentialSubject']['pagex']}
 	return jsonify(resp)
 	
 
