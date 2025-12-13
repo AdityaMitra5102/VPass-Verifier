@@ -94,6 +94,15 @@ def verify_credential(presentation):
         print(f"Verification failed: {str(e)}")
         return None
 
+def check_domain(respurl, pagex):
+	domain1=urlparse(respurl).netloc.lower()
+	domain2=urlparse(pagex).netloc.lower()
+	domain1=domain1.split(':')[0]
+	domain2=domain2.split(':')[0]
+	return domain1==domain2 or domain1.endswith('.'+domain2)
+
+
+
 @app.route('/')
 def index():
 	return render_template('index.html')
@@ -137,7 +146,9 @@ def register_complete():
 	signature=base64.urlsafe_b64decode(request.args.get('signature'))
 	authenticatorId=base64.urlsafe_b64decode(request.args.get('authenticatorId'))
 	rawId=authenticatorId
-	
+	if not check_domain(json.loads(clientDataJson.decode())['origin'], pagex):
+		raise ValueError(f'Request not signed using Pagex at f{pagex}')
+		
 	respjsonxx={'clientDataJSON': clientDataJson, 'authenticatorData': authenticatorData, 'signature': signature}
 	print(respjsonxx)
 	resp=AuthenticatorAssertionResponse.from_dict(respjsonxx)
