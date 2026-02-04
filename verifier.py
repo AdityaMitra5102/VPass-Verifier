@@ -144,7 +144,7 @@ def register_complete():
 	clientDataJson=base64.urlsafe_b64decode(request.args.get('clientDataJSON'))
 	authenticatorData=base64.urlsafe_b64decode(request.args.get('authenticatorData'))
 	signature=base64.urlsafe_b64decode(request.args.get('signature'))
-	authenticatorId=base64.urlsafe_b64decode(request.args.get('authenticatorId'))
+	authenticatorId=base64.urlsafe_b64decode(request.args.get('credentialId'))
 	rawId=authenticatorId
 	if not check_domain(json.loads(clientDataJson.decode())['origin'], pagex):
 		raise ValueError(f'Request not signed using Pagex at f{pagex}')
@@ -179,3 +179,4 @@ def logout():
 
 			
 app.run(host='0.0.0.0', port=9000, debug=True)
+
