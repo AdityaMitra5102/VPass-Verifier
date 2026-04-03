@@ -8,6 +8,7 @@ from fido2.webauthn import *
 import base64
 from urllib.parse import urlparse
 app=Flask(__name__)
+import hashlib
 
 app.secret_key=os.urandom(32)
 
@@ -37,6 +38,11 @@ def deserialize_cred(credjson):
 		else:
 			cred2[int(x)]=cred['public_key'][x]
 	return AttestedCredentialData.create(aaguid=cred['aaguid'], credential_id=cred['credential_id'], public_key=cred2)
+
+def get_hostname_hash(url):
+	hostname=urlparse(url).hostname
+	hostnamehash=hashlib.sha256(hostname.encode()).digest()
+	return hostnamehash
 	
 import requests
 from jose import jws
@@ -128,10 +134,12 @@ def register_begin():
 	pagex_domain=urlparse(pagex).netloc
 	rp = PublicKeyCredentialRpEntity(name="PageX", id=pagex_domain)
 	server = Fido2Server(rp)
-	options, state = server.authenticate_begin()
+	hostname=get_hostname_hash(myurl)
+	challenge=hostname+os.urandom(16)
+	
+	options, state = server.authenticate_begin(challenge=challenge)
 	user=session['cred']['credentialSubject']['user']['name']
 
-	print(options.public_key.challenge)
 
 	chalb64=base64.urlsafe_b64encode(options.public_key.challenge).decode()
 	session['state']=state
@@ -150,15 +158,18 @@ def register_complete():
 		raise ValueError(f'Request not signed using Pagex at f{pagex}')
 		
 	respjsonxx={'clientDataJSON': clientDataJson, 'authenticatorData': authenticatorData, 'signature': signature}
-	print(respjsonxx)
+
 	resp=AuthenticatorAssertionResponse.from_dict(respjsonxx)
 	pagex_domain=urlparse(pagex).netloc
 	cred={'rawId': rawId, 'response': resp}
+	currchallenge=resp.client_data.challenge
+	if currchallenge[:32] != get_hostname_hash(myurl):
+		raise ValueError("Probable MITM")
+
 	rp = PublicKeyCredentialRpEntity(name="PageX", id=pagex_domain)
 	server = Fido2Server(rp)
 	credjson=json.dumps(session['cred']['credentialSubject']['cred'])
 	credentials=[deserialize_cred(credjson)]
-	print(credentials)
 	server.authenticate_complete(state, credentials, cred)
 	session['loggedin']=session['cred']['credentialSubject']['user']
 	return redirect('/dashboard')
