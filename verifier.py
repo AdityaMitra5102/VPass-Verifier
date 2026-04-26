@@ -208,6 +208,7 @@ def logout():
 	return redirect('/')
 
 
-print("Visit http://localhost:9000/")			
-app.run(host='0.0.0.0', port=9000, debug=True)
+if __name__=='__main__':
+	print("Visit http://localhost:9000/")			
+	app.run(host='0.0.0.0', port=9000, debug=True)
 
