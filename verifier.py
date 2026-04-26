@@ -15,6 +15,8 @@ app.secret_key=os.urandom(32)
 import base64
 import json
 
+os.makedirs('cache', exist_ok=True)
+
 def serialize_cred(cred):
 	cred2={'aaguid': base64.b64encode(cred['aaguid']).decode(), 'credential_id': base64.b64encode(cred['credential_id']).decode()}
 	pubkey={}
@@ -56,11 +58,21 @@ def resolve_did(did):
         raise ValueError("Only did:web is supported")
     domain = did.replace("did:web:", "")
     url = f"https://{domain}/.well-known/did.json"
-    
+    filename=hashlib.sha256(did.encode()).hexdigest()+'.json'
+    filepath=os.path.join('cache', filename)
     try:
-        response = requests.get(url)
-        response.raise_for_status()
-        did_doc = response.json()
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+            did_doc = response.json()
+            with open(filepath, 'w') as fl:
+                fl.write(json.dumps(did_doc, indent=4))
+        except:
+            fl=open(filepath, 'r')
+            did_doc=json.loads(fl.read())
+            fl.close()
+        
+        
         
         # Extract public key from DID Document
         for vm in did_doc.get('verificationMethod', []):
@@ -111,7 +123,11 @@ def check_domain(respurl, pagex):
 
 @app.route('/')
 def index():
-	return render_template('index.html')
+	return render_template('index.html', authfail='', resview='none')
+	
+@app.route('/fail')
+def fail():
+	return render_template('index.html', authfail='Authentication Failed', resview='block')
 
 @app.route('/verify', methods=['POST'])
 def verify():
@@ -147,32 +163,35 @@ def register_begin():
 
 @app.route('/authenticate/complete')
 def register_complete():
-	state=session['state']
-	pagex=session['cred']['credentialSubject']['pagex']	
-	clientDataJson=base64.urlsafe_b64decode(request.args.get('clientDataJSON'))
-	authenticatorData=base64.urlsafe_b64decode(request.args.get('authenticatorData'))
-	signature=base64.urlsafe_b64decode(request.args.get('signature'))
-	authenticatorId=base64.urlsafe_b64decode(request.args.get('credentialId'))
-	rawId=authenticatorId
-	if not check_domain(json.loads(clientDataJson.decode())['origin'], pagex):
-		raise ValueError(f'Request not signed using Pagex at f{pagex}')
+	try:
+		state=session['state']
+		pagex=session['cred']['credentialSubject']['pagex']	
+		clientDataJson=base64.urlsafe_b64decode(request.args.get('clientDataJSON'))
+		authenticatorData=base64.urlsafe_b64decode(request.args.get('authenticatorData'))
+		signature=base64.urlsafe_b64decode(request.args.get('signature'))
+		authenticatorId=base64.urlsafe_b64decode(request.args.get('credentialId'))
+		rawId=authenticatorId
+		if not check_domain(json.loads(clientDataJson.decode())['origin'], pagex):
+			raise ValueError(f'Request not signed using Pagex at f{pagex}')
 		
-	respjsonxx={'clientDataJSON': clientDataJson, 'authenticatorData': authenticatorData, 'signature': signature}
+		respjsonxx={'clientDataJSON': clientDataJson, 'authenticatorData': authenticatorData, 'signature': signature}
 
-	resp=AuthenticatorAssertionResponse.from_dict(respjsonxx)
-	pagex_domain=urlparse(pagex).netloc
-	cred={'rawId': rawId, 'response': resp}
-	currchallenge=resp.client_data.challenge
-	if currchallenge[:32] != get_hostname_hash(myurl):
-		raise ValueError("Probable MITM")
+		resp=AuthenticatorAssertionResponse.from_dict(respjsonxx)
+		pagex_domain=urlparse(pagex).netloc
+		cred={'rawId': rawId, 'response': resp}
+		currchallenge=resp.client_data.challenge
+		if currchallenge[:32] != get_hostname_hash(myurl):
+			raise ValueError("Probable MITM")
 
-	rp = PublicKeyCredentialRpEntity(name="PageX", id=pagex_domain)
-	server = Fido2Server(rp)
-	credjson=json.dumps(session['cred']['credentialSubject']['cred'])
-	credentials=[deserialize_cred(credjson)]
-	server.authenticate_complete(state, credentials, cred)
-	session['loggedin']=session['cred']['credentialSubject']['user']
-	return redirect('/dashboard')
+		rp = PublicKeyCredentialRpEntity(name="PageX", id=pagex_domain)
+		server = Fido2Server(rp)
+		credjson=json.dumps(session['cred']['credentialSubject']['cred'])
+		credentials=[deserialize_cred(credjson)]
+		server.authenticate_complete(state, credentials, cred)
+		session['loggedin']=session['cred']['credentialSubject']['user']
+		return redirect('/dashboard')
+	except:
+		return redirect('/fail')
 	
 @app.route('/dashboard')
 def dashboard():

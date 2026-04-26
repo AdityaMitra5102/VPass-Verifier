@@ -316,8 +316,10 @@
         <p class="info-text">This system validates the cryptographic signature and authenticity of the provided VPass credentials against trusted issuers.</p>
     </div>
     
-    <div class="container" id="resultSection" style="display: none;">
-        <h2 id="statusMessage"></h2>
+    <div class="container" id="resultSection" style="display: {{resview}};">
+        <h2 id="statusMessage">
+        <p style="color:#ef4444; font-size:2em; font-weight:700; text-align:center; margin-top:15px;">{{authfail}}</p>
+        </h2>
         
         <div class="details-container">
             <div id="userDetails"></div>
